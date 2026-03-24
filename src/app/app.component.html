@@ -1,0 +1,863 @@
+<!-- =========================================================================
+  AppComponent Template - NYTimes Books Explorer
+  =========================================================================
+  Estructura principal de la SPA:
+  1. Header sticky con logo, modo oscuro
+  2. Menú principal (6 cards de endpoints)
+  3. Formulario dinámico según opción seleccionada
+  4. Resultados (libros en cards, overview en acordeón, reseñas en lista)
+  5. Footer
+
+  Usa @if, @for de Angular 18 (nueva sintaxis de control flow)
+  ========================================================================= -->
+
+<div class="min-h-screen" style="background: var(--color-bg); color: var(--color-text);">
+
+  <!-- =====================================================================
+    HEADER - Logo, título y toggle de modo oscuro
+    ===================================================================== -->
+  <header class="app-header">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+
+      <!-- Logo e identidad -->
+      <div class="flex items-center gap-3">
+        <button (click)="goToMenu()" class="flex items-center gap-3 group"
+          [class.cursor-pointer]="selectedOption() !== null" [class.cursor-default]="selectedOption() === null">
+          <!-- Logo rectangular estilo NYT -->
+          <div style="background: var(--color-text); color: var(--color-bg);"
+            class="px-3 py-1 font-serif font-bold text-sm rounded-sm tracking-tight select-none">
+            NYT
+          </div>
+          <div>
+            <div class="font-serif font-bold text-base leading-tight" style="color: var(--color-text);">
+              Books Explorer
+            </div>
+            <div class="text-xs" style="color: var(--color-text-secondary);">
+              Best-Sellers &amp; Reseñas
+            </div>
+          </div>
+        </button>
+
+        <!-- Breadcrumb cuando hay opción seleccionada -->
+        @if (selectedOption()) {
+        <div class="hidden sm:flex items-center gap-2 ml-2" style="color: var(--color-text-secondary);">
+          <span class="text-sm">›</span>
+          <span class="text-sm font-medium" style="color: var(--color-accent);">
+            {{ selectedOption()!.icon }} {{ selectedOption()!.label }}
+          </span>
+        </div>
+        }
+      </div>
+
+      <!-- Controles del header -->
+      <div class="flex items-center gap-3">
+
+        <!-- Indicador de límite de API -->
+        <div class="hidden md:flex items-center gap-1.5 text-xs" style="color: var(--color-text-secondary);">
+          <span class="inline-block w-2 h-2 rounded-full bg-green-500"></span>
+          <span>Máx. 4000 req/día</span>
+        </div>
+
+        <!-- Toggle modo oscuro/claro -->
+        <button (click)="themeService.toggleTheme()" class="p-2 rounded-full transition-colors text-lg"
+          style="background: var(--color-border);"
+          [title]="themeService.isDarkMode() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+          {{ themeService.isDarkMode() ? '☀️' : '🌙' }}
+        </button>
+
+        <!-- Botón volver al menú (si hay opción seleccionada) -->
+        @if (selectedOption()) {
+        <button (click)="goToMenu()" class="btn-secondary text-xs hidden sm:flex">
+          ← Menú
+        </button>
+        }
+      </div>
+    </div>
+  </header>
+
+  <!-- =====================================================================
+    CONTENIDO PRINCIPAL
+    ===================================================================== -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+
+    <!-- =================================================================
+      MENÚ PRINCIPAL - Visible cuando no hay opción seleccionada
+      ================================================================= -->
+    @if (!selectedOption()) {
+    <div class="animate-fade-in">
+
+      <!-- Título de bienvenida -->
+      <div class="text-center mb-10 pt-4">
+        <h1 class="headline-xl mb-3">
+          Explorador de Libros
+          <span style="color: var(--color-accent);">Hardcover Nonfiction</span>
+        </h1>
+        <p class="text-base max-w-2xl mx-auto" style="color: var(--color-text-secondary);">
+          Accede a best-sellers, listas históricas y reseñas literarias del
+          New York Times a través de 6 endpoints diferentes de su API oficial.
+        </p>
+        <div class="mt-4 inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full"
+          style="background: var(--color-border); color: var(--color-text-secondary);">
+          🔐 API Key protegida en backend · 📊 Books API v3 + Article Search API
+        </div>
+      </div>
+
+      <!-- Separador decorativo -->
+      <div class="flex items-center gap-4 mb-8">
+        <div class="flex-1 h-px" style="background: var(--color-border);"></div>
+        <span class="text-xs font-semibold tracking-widest uppercase" style="color: var(--color-text-secondary);">
+          Selecciona un endpoint
+        </span>
+        <div class="flex-1 h-px" style="background: var(--color-border);"></div>
+      </div>
+
+      <!-- Grid de opciones del menú -->
+      <div class="menu-grid">
+        @for (option of menuOptions; track option.id) {
+        <button (click)="selectOption(option)" class="menu-card text-left">
+          <!-- Número e icono -->
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">{{ option.icon }}</span>
+              <span class="text-xs font-bold px-2 py-0.5 rounded"
+                style="background: var(--color-border); color: var(--color-text-secondary);">
+                EP {{ option.id }}
+              </span>
+            </div>
+            <span class="text-xs" style="color: var(--color-text-secondary);">→</span>
+          </div>
+
+          <!-- Título y descripción -->
+          <h3 class="font-serif font-bold text-base mb-1" style="color: var(--color-text);">
+            {{ option.label }}
+          </h3>
+          <p class="text-sm mb-3" style="color: var(--color-text-secondary);">
+            {{ option.description }}
+          </p>
+
+          <!-- Tag del endpoint NYT -->
+          <div class="endpoint-tag">
+            {{ option.endpointTag }}
+          </div>
+
+          <!-- Indicador de parámetros requeridos -->
+          <div class="mt-2 flex items-center gap-1">
+            @if (option.fields.length === 0) {
+            <span class="text-xs" style="color: var(--color-text-secondary);">
+              ⚡ Sin parámetros
+            </span>
+            } @else {
+            <span class="text-xs" style="color: var(--color-text-secondary);">
+              📝 {{ option.fields.length }} parámetro{{ option.fields.length > 1 ? 's' : '' }}
+            </span>
+            }
+          </div>
+        </button>
+        }
+      </div>
+
+      <!-- Info footer del menú -->
+      <div class="mt-10 p-4 rounded-sm text-sm"
+        style="background: var(--color-bg-secondary); border: 1px solid var(--color-border);">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+          <div>
+            <div class="font-bold text-lg mb-0.5" style="color: var(--color-accent);">6</div>
+            <div style="color: var(--color-text-secondary);">Endpoints implementados</div>
+          </div>
+          <div>
+            <div class="font-bold text-lg mb-0.5" style="color: var(--color-accent);">2</div>
+            <div style="color: var(--color-text-secondary);">APIs del NYTimes</div>
+          </div>
+          <div>
+            <div class="font-bold text-lg mb-0.5" style="color: var(--color-accent);">4000</div>
+            <div style="color: var(--color-text-secondary);">Peticiones/día gratuitas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- =================================================================
+      VISTA DE ENDPOINT - Formulario + Resultados
+      ================================================================= -->
+    @if (selectedOption()) {
+    <div class="animate-fade-in">
+
+      <!-- Cabecera del endpoint seleccionado -->
+      <div class="mb-6">
+        <div class="flex items-center gap-2 mb-1">
+          <button (click)="goToMenu()" class="text-sm sm:hidden flex items-center gap-1"
+            style="color: var(--color-accent);">
+            ← Volver
+          </button>
+        </div>
+
+        <div class="flex flex-wrap items-start gap-3 justify-between">
+          <div>
+            <h2 class="font-serif font-bold text-xl sm:text-2xl mb-1">
+              {{ selectedOption()!.icon }} {{ selectedOption()!.label }}
+            </h2>
+            <p class="text-sm mb-2" style="color: var(--color-text-secondary);">
+              {{ selectedOption()!.description }}
+            </p>
+            <!-- URL del endpoint NYT (referencia técnica) -->
+            <div class="endpoint-tag">
+              NYT: {{ selectedOption()!.nytUrl }}
+            </div>
+          </div>
+
+          <!-- Botones de exportación (solo con resultados) -->
+          @if (hasResults()) {
+          <div class="flex gap-2 flex-wrap">
+            <button (click)="exportCsv()" class="btn-secondary text-xs">
+              ⬇ CSV
+            </button>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- Separador -->
+      <hr class="nyt-divider">
+
+      <!-- =============================================================
+          FORMULARIO DINÁMICO
+          ============================================================= -->
+      @if (selectedOption()!.fields.length > 0) {
+      <div class="mb-6 p-5 rounded-sm"
+        style="background: var(--color-bg-secondary); border: 1px solid var(--color-border);">
+
+        <h3 class="font-semibold text-sm uppercase tracking-wider mb-4" style="color: var(--color-text-secondary);">
+          Parámetros de consulta
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          @for (field of selectedOption()!.fields; track field.key) {
+          <div>
+            <label class="block text-sm font-semibold mb-1.5" style="color: var(--color-text);">
+              {{ field.label }}
+              @if (field.required) {
+              <span style="color: var(--color-error);">*</span>
+              }
+            </label>
+
+            <!-- Input de texto -->
+            @if (field.type === 'text') {
+            <input type="text" class="form-input" [(ngModel)]="formValues[field.key]"
+              [placeholder]="field.placeholder || ''">
+            }
+
+            <!-- Input de fecha -->
+            @if (field.type === 'date') {
+            <input type="date" class="form-input" [(ngModel)]="formValues[field.key]" max="{{ '2099-12-31' }}">
+            }
+
+            <!-- Select -->
+            @if (field.type === 'select') {
+            <select class="form-select" [(ngModel)]="formValues[field.key]">
+              @for (opt of field.options; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+            }
+
+            <!-- Hint del campo -->
+            @if (field.hint) {
+            <p class="text-xs mt-1" style="color: var(--color-text-secondary);">
+              {{ field.hint }}
+            </p>
+            }
+          </div>
+          }
+        </div>
+
+        <div class="mt-5">
+          <button (click)="executeQuery()" [disabled]="isLoading()" class="btn-primary">
+            @if (isLoading()) {
+            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            Consultando...
+            } @else {
+            🔍 Consultar API
+            }
+          </button>
+
+          <!-- Sugerencias de autores populares (Nuevo) -->
+          @if (selectedOption()?.id === 5 || selectedOption()?.id === 6) {
+          <div class="mt-6 pt-5" style="border-top: 1px dotted var(--color-border); width: 100%;">
+            <h4 class="text-xs uppercase tracking-widest font-bold mb-3" style="color: var(--color-text);">
+              💡 Autores Más Populares (Sugerencias)
+            </h4>
+            <div class="flex flex-wrap gap-2">
+              @for (authorName of suggestedAuthors; track authorName) {
+              <button (click)="selectAuthor(authorName)"
+                class="px-3 py-1.5 rounded-sm text-xs font-medium transition-all hover:translate-y-[-2px]"
+                style="background: var(--color-bg); border: 1px solid var(--color-border); color: var(--color-accent); cursor: pointer;">
+                + {{ authorName }}
+              </button>
+              }
+            </div>
+            <p class="text-[10px] mt-3" style="color: var(--color-text-secondary);">
+              Haz clic en un nombre para buscarlo automáticamente en el historial de NYT.
+            </p>
+          </div>
+          }
+        </div>
+      </div>
+      } @else {
+      <!-- Endpoint 4: Sin parámetros, ejecutar directo -->
+      <div class="mb-6 p-4 rounded-sm flex items-center justify-between flex-wrap gap-3"
+        style="background: var(--color-bg-secondary); border: 1px solid var(--color-border);">
+        <p class="text-sm" style="color: var(--color-text-secondary);">
+          ⚡ Este endpoint no requiere parámetros adicionales. Haz clic para consultar.
+        </p>
+        <button (click)="executeQuery()" [disabled]="isLoading()" class="btn-primary">
+          @if (isLoading()) {
+          <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          Consultando...
+          } @else {
+          🔍 Consultar API
+          }
+        </button>
+      </div>
+      }
+
+      <!-- =============================================================
+          MENSAJE DE ERROR
+          ============================================================= -->
+      @if (errorMessage()) {
+      <div class="mb-6 p-4 rounded-sm animate-fade-in"
+        style="background: rgba(208, 2, 27, 0.06); border: 1.5px solid rgba(208, 2, 27, 0.2);">
+        <div class="flex items-start gap-3">
+          <span class="text-2xl flex-shrink-0">❌</span>
+          <div class="flex-1">
+            <div class="font-bold text-sm mb-1" style="color: var(--color-error);">
+              {{ errorMessage()!.message }}
+            </div>
+            @if (errorMessage()!.detail) {
+            <div class="text-sm" style="color: var(--color-text-secondary);">
+              {{ errorMessage()!.detail }}
+            </div>
+            }
+            <div class="text-xs mt-1.5 font-mono" style="color: var(--color-text-secondary);">
+              Código: {{ errorMessage()!.error_code }}
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- =============================================================
+          LOADING SKELETON
+          ============================================================= -->
+      @if (isLoading()) {
+      <div class="animate-fade-in">
+        <div class="flex flex-col items-center justify-center py-16 gap-4">
+          <div class="spinner"></div>
+          <div class="text-sm" style="color: var(--color-text-secondary);">
+            Consultando API del NYTimes...
+          </div>
+          <div class="text-xs" style="color: var(--color-text-secondary);">
+            La API Key se añade de forma segura en el backend
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- =============================================================
+          RESULTADOS - Renderizado condicional por tipo
+          ============================================================= -->
+      @if (!isLoading() && hasResults()) {
+      <div class="animate-fade-in">
+
+        <!-- Info banner con resumen de resultados -->
+        <div class="info-banner mb-5">
+          ✅
+          <span>
+            @if (resultType() === 'overview') {
+            {{ overviewLists.length }} listas encontradas ·
+            Fecha: {{ formatDate(results()?.published_date) }}
+            }
+            @if (resultType() === 'book_list') {
+            {{ currentBooks.length }} libros encontrados ·
+            {{ results()?.display_name || results()?.description }} ·
+            Fecha: {{ formatDate(results()?.published_date || results()?.bestsellers_date) }}
+            }
+            @if (resultType() === 'reviews') {
+            {{ results()?.total_results | number }} reseñas encontradas para
+            "{{ results()?.query }}"
+            }
+            @if (resultType() === 'bestseller_search') {
+            {{ results()?.num_results }} coincidencias en best-sellers actuales para
+            "{{ results()?.query }}"
+            }
+          </span>
+        </div>
+
+        <!-- =========================================================
+              TIPO: OVERVIEW (Endpoint 1) - Acordeón de listas
+              ========================================================= -->
+        @if (resultType() === 'overview') {
+        <div class="space-y-3">
+          @for (list of overviewLists; track list.list_name) {
+          <div class="book-card overflow-hidden">
+
+            <!-- Cabecera de la lista (clickeable para expandir) -->
+            <button class="w-full text-left p-4 flex items-center justify-between hover:bg-opacity-50 transition-colors"
+              style="background: var(--color-bg-secondary);" (click)="toggleList(list.list_name)">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h3 class="font-serif font-bold text-base" style="color: var(--color-text);">
+                    {{ list.display_name }}
+                  </h3>
+                  <span class="text-xs px-2 py-0.5 rounded"
+                    style="background: var(--color-border); color: var(--color-text-secondary);">
+                    {{ list.books.length }} libros
+                  </span>
+                  @if (list.updated === 'WEEKLY') {
+                  <span class="text-xs px-2 py-0.5 rounded"
+                    style="background: rgba(50,104,145,0.1); color: var(--color-accent);">
+                    Semanal
+                  </span>
+                  }
+                </div>
+                <!-- Top 1 libro de la lista como preview -->
+                @if (list.books.length > 0 && !isListExpanded(list.list_name)) {
+                <div class="text-sm mt-0.5" style="color: var(--color-text-secondary);">
+                  #1 {{ list.books[0].title }} — {{ list.books[0].author }}
+                </div>
+                }
+              </div>
+              <div class="text-lg ml-3 transition-transform duration-200"
+                [class.rotate-180]="isListExpanded(list.list_name)">
+                ▾
+              </div>
+            </button>
+
+            <!-- Libros expandidos -->
+            @if (isListExpanded(list.list_name)) {
+            <div style="border-top: 1px solid var(--color-border);">
+              @for (book of list.books; track book.primary_isbn13 || book.title) {
+              <div class="flex gap-3 p-4" style="border-bottom: 1px solid var(--color-border);">
+
+                <!-- Ranking -->
+                <div class="flex-shrink-0 flex flex-col items-center gap-1">
+                  <div [class]="getRankClass(book.rank)">
+                    {{ book.rank }}
+                  </div>
+                </div>
+
+                <!-- Portada -->
+                <img [src]="getBookCover(book)" [alt]="book.title" class="book-cover flex-shrink-0"
+                  (error)="$any($event.target).src = defaultBookCover">
+
+                <!-- Info del libro -->
+                <div class="flex-1 min-w-0">
+                  <h4 class="font-serif font-bold text-sm leading-snug mb-0.5">
+                    {{ book.title }}
+                  </h4>
+                  <div class="text-sm mb-1" style="color: var(--color-text-secondary);">
+                    {{ book.author }}
+                  </div>
+                  @if (book.description) {
+                  <p class="text-xs mb-1.5" style="color: var(--color-text-secondary);">
+                    {{ truncate(book.description, 120) }}
+                  </p>
+                  }
+                  <div class="flex flex-wrap gap-2 text-xs" style="color: var(--color-text-secondary);">
+                    @if (book.weeks_on_list > 0) {
+                    <span>📅 {{ book.weeks_on_list }} sem. en lista</span>
+                    }
+                    @if (book.publisher) {
+                    <span>🏛 {{ book.publisher }}</span>
+                    }
+                    @if (book.amazon_product_url) {
+                    <a [href]="book.amazon_product_url" target="_blank" class="underline"
+                      style="color: var(--color-accent);">
+                      Amazon ↗
+                    </a>
+                    }
+                  </div>
+                </div>
+              </div>
+              }
+            </div>
+            }
+          </div>
+          }
+        </div>
+        }
+
+        <!-- =========================================================
+              TIPO: BOOK_LIST (Endpoints 2, 3, 4) - Cards de libros
+              ========================================================= -->
+        @if (resultType() === 'book_list') {
+        <div class="space-y-3">
+          @for (book of currentBooks; track book.primary_isbn13 || book.title; let i = $index) {
+          <div class="book-card flex gap-4 p-4">
+
+            <!-- Número de ranking grande (decorativo) -->
+            <div class="rank-number-large hidden sm:flex items-center w-12 justify-center">
+              {{ book.rank }}
+            </div>
+
+            <!-- Portada del libro -->
+            <img [src]="getBookCover(book)" [alt]="book.title" class="book-cover flex-shrink-0"
+              (error)="$any($event.target).src = defaultBookCover">
+
+            <!-- Información principal -->
+            <div class="flex-1 min-w-0">
+              <!-- Título y badges de ranking -->
+              <div class="flex items-start gap-2 flex-wrap mb-1">
+                <!-- Badge móvil del ranking -->
+                <div [class]="getRankClass(book.rank)" class="sm:hidden">
+                  {{ book.rank }}
+                </div>
+
+                <h3 class="font-serif font-bold text-base leading-snug">
+                  {{ book.title }}
+                </h3>
+
+                <!-- Tendencia de ranking -->
+                @if (getRankChange(book).direction === 'new') {
+                <span class="badge-new">Nuevo</span>
+                }
+                @if (getRankChange(book).direction === 'up') {
+                <span class="badge-up">▲ {{ getRankChange(book).value }}</span>
+                }
+                @if (getRankChange(book).direction === 'down') {
+                <span class="badge-down">▼ {{ getRankChange(book).value }}</span>
+                }
+                @if (getRankChange(book).direction === 'same') {
+                <span class="badge-same">― Igual</span>
+                }
+              </div>
+
+              <!-- Autor -->
+              <div class="text-sm font-medium mb-1" style="color: var(--color-text-secondary);">
+                ✍️ {{ book.author }}
+              </div>
+
+              <!-- Descripción -->
+              @if (book.description) {
+              <p class="text-sm mb-2" style="color: var(--color-text-secondary);">
+                {{ truncate(book.description) }}
+              </p>
+              }
+
+              <!-- Metadatos en fila -->
+              <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs" style="color: var(--color-text-secondary);">
+                @if (book.publisher) {
+                <span>🏛 {{ book.publisher }}</span>
+                }
+                @if (book.weeks_on_list > 0) {
+                <span>📅 {{ book.weeks_on_list }} semanas en lista</span>
+                }
+                @if (book.rank_last_week > 0) {
+                <span>Semana pasada: #{{ book.rank_last_week }}</span>
+                }
+                @if (book.primary_isbn13) {
+                <span>ISBN: {{ book.primary_isbn13 }}</span>
+                }
+              </div>
+
+              <!-- Links -->
+              <div class="flex flex-wrap gap-2 mt-2">
+                @if (book.amazon_product_url) {
+                <a [href]="book.amazon_product_url" target="_blank" rel="noopener noreferrer"
+                  class="btn-secondary text-xs py-1 px-2">
+                  Amazon ↗
+                </a>
+                }
+                @if (book.sunday_review_link) {
+                <a [href]="book.sunday_review_link" target="_blank" rel="noopener noreferrer" class="text-xs underline"
+                  style="color: var(--color-accent);">
+                  Reseña NYT ↗
+                </a>
+                }
+                @for (link of book.buy_links?.slice(0, 2); track link.name) {
+                <a [href]="link.url" target="_blank" rel="noopener noreferrer" class="text-xs"
+                  style="color: var(--color-text-secondary); text-decoration: underline;">
+                  {{ link.name }} ↗
+                </a>
+                }
+              </div>
+            </div>
+          </div>
+          }
+        </div>
+        }
+
+        <!-- =========================================================
+              TIPO: HISTORY (Endpoint 5) - Historial de Best-Sellers
+              ========================================================= -->
+        @if (resultType() === 'history') {
+        <div>
+          <!-- Lista de libros encontrados en el historial -->
+          <div class="space-y-3 mb-6">
+            @for (book of currentBooks; track book.title + book.author) {
+            <div class="book-card p-4">
+              <div class="flex gap-4">
+                <!-- Portada (si hay ISBN) -->
+                <img [src]="getBookCover(book)" [alt]="book.title" class="book-cover flex-shrink-0"
+                  (error)="$any($event.target).src = defaultBookCover">
+
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-serif font-bold text-base leading-snug mb-0.5">
+                    {{ book.title }}
+                  </h3>
+                  <div class="text-sm font-medium mb-1.5" style="color: var(--color-text-secondary);">
+                    ✍️ {{ book.author }}
+                  </div>
+
+                  @if (book.description) {
+                  <p class="text-sm mb-2" style="color: var(--color-text-secondary);">
+                    {{ truncate(book.description, 200) }}
+                  </p>
+                  }
+
+                  <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs mb-3" style="color: var(--color-text-secondary);">
+                    @if (book.publisher) {
+                    <span>🏛 {{ book.publisher }}</span>
+                    }
+                    @if (book.price) {
+                    <span>💰 Precio: {{ book.price }}</span>
+                    }
+                    @if (book.isbns && book.isbns.length > 0) {
+                    <span>🆔 ISBN: {{ book.isbns[0].isbn13 }}</span>
+                    }
+                  </div>
+
+                  <!-- Ranking histórico (si aplica) -->
+                  @if (book.ranks_history && book.ranks_history.length > 0) {
+                  <div class="bg-opacity-5 p-2 rounded-sm border-l-2 border-accent" style="background: var(--color-accent);">
+                    <div class="text-[10px] font-bold uppercase mb-1" style="color: var(--color-accent);">
+                      📈 Rendimiento Histórico
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                      @for (rank of book.ranks_history.slice(0, 3); track rank.published_date) {
+                      <div class="text-[11px]">
+                        <span class="font-bold">#{{ rank.rank }}</span> en {{ rank.display_name }} ({{ rank.published_date }})
+                      </div>
+                      }
+                    </div>
+                  </div>
+                  }
+                </div>
+              </div>
+            </div>
+            }
+
+            @if (currentBooks.length === 0) {
+            <div class="text-center py-12" style="color: var(--color-text-secondary);">
+              <div class="text-4xl mb-3">📭</div>
+              <div class="font-medium">No se encontraron registros históricos</div>
+              <div class="text-sm">Intenta con otro autor o título</div>
+            </div>
+            }
+          </div>
+
+          <!-- PAGINACIÓN para Endpoint 5 -->
+          @if (totalPages() > 1) {
+          <div class="flex items-center justify-center gap-2 mt-6 flex-wrap">
+            <button (click)="fetchHistory(0)" [disabled]="currentPage() === 0" class="btn-secondary text-xs py-1.5 px-3"
+              [class.opacity-40]="currentPage() === 0">
+              ««
+            </button>
+
+            <button (click)="fetchHistory(currentPage() - 1)" [disabled]="currentPage() === 0"
+              class="btn-secondary text-xs py-1.5 px-3" [class.opacity-40]="currentPage() === 0">
+              ‹ Anterior
+            </button>
+
+            @for (page of pageRange; track page) {
+            <button (click)="fetchHistory(page)" class="text-xs py-1.5 px-3 rounded-sm font-medium transition-colors"
+              [style.background]="page === currentPage() ? 'var(--color-accent)' : 'var(--color-border)'"
+              [style.color]="page === currentPage() ? 'white' : 'var(--color-text)'">
+              {{ page + 1 }}
+            </button>
+            }
+
+            <button (click)="fetchHistory(currentPage() + 1)" [disabled]="currentPage() >= totalPages() - 1"
+              class="btn-secondary text-xs py-1.5 px-3" [class.opacity-40]="currentPage() >= totalPages() - 1">
+              Siguiente ›
+            </button>
+
+            <button (click)="fetchHistory(totalPages() - 1)" [disabled]="currentPage() >= totalPages() - 1"
+              class="btn-secondary text-xs py-1.5 px-3" [class.opacity-40]="currentPage() >= totalPages() - 1">
+              »»
+            </button>
+          </div>
+
+          <div class="text-center text-xs mt-2" style="color: var(--color-text-secondary);">
+            Página {{ currentPage() + 1 }} de {{ totalPages() + 1 }} ·
+            {{ results()?.num_results | number }} resultados totales
+          </div>
+          }
+        </div>
+        }
+
+        <!-- =========================================================
+              TIPO: LIST_NAMES (Endpoint 4: Explorador de Categorías)
+              ========================================================= -->
+        @if (resultType() === 'list_names') {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          @for (list of results()?.results; track list.list_name_encoded) {
+          <div
+            class="menu-card p-4 flex flex-col justify-between h-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-sm hover:border-accent transition-all">
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-xl">📋</span>
+                <h3 class="font-serif font-bold text-lg leading-tight">{{ list.display_name }}</h3>
+              </div>
+
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                  [style.background]="list.updated === 'WEEKLY' ? 'rgba(46,125,50,0.1)' : 'rgba(50,104,145,0.1)'"
+                  [style.color]="list.updated === 'WEEKLY' ? '#2e7d32' : 'var(--color-accent)'">
+                  {{ list.updated }}
+                </span>
+                <span class="text-[10px] font-medium" style="color: var(--color-text-secondary);">
+                  {{ list.list_name }}
+                </span>
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-gray-100 dark:border-gray-800 space-y-1">
+              <div class="text-[10px]" style="color: var(--color-text-secondary);">
+                <span class="font-semibold">Actualizado:</span> {{ list.newest_published_date }}
+              </div>
+              <div class="text-[10px]" style="color: var(--color-text-secondary);">
+                <span class="font-semibold">Historial desde:</span> {{ list.oldest_published_date }}
+              </div>
+            </div>
+          </div>
+          }
+        </div>
+        }
+
+        <!-- =========================================================
+              TIPO: BESTSELLER_SEARCH (Endpoint 6)
+              ========================================================= -->
+        @if (resultType() === 'bestseller_search') {
+        <div>
+          @if (currentBooks.length === 0) {
+          <div class="text-center py-12" style="color: var(--color-text-secondary);">
+            <div class="text-4xl mb-3">📭</div>
+            <div class="font-medium">No se encontraron coincidencias</div>
+            <div class="text-sm mt-1">
+              "{{ results()?.query }}" no aparece en ninguna lista best-seller actual.
+            </div>
+            <div class="text-sm mt-1">
+              Intenta con otro nombre de autor o título.
+            </div>
+          </div>
+          }
+
+          <div class="space-y-3">
+            @for (book of currentBooks; track book.primary_isbn13 || book.title) {
+            <div class="book-card flex gap-4 p-4">
+
+              <!-- Portada -->
+              <img [src]="getBookCover(book)" [alt]="book.title" class="book-cover flex-shrink-0"
+                (error)="$any($event.target).src = defaultBookCover">
+
+              <div class="flex-1 min-w-0">
+                <h3 class="font-serif font-bold text-base leading-snug mb-0.5">
+                  {{ book.title }}
+                </h3>
+                <div class="text-sm font-medium mb-1.5" style="color: var(--color-text-secondary);">
+                  ✍️ {{ book.author }}
+                </div>
+
+                <!-- Listas donde aparece el libro -->
+                @if (book.found_in_lists && book.found_in_lists.length > 0) {
+                <div class="flex flex-wrap gap-1.5 mb-2">
+                  <span class="text-xs font-semibold" style="color: var(--color-text-secondary);">
+                    En listas:
+                  </span>
+                  @for (listName of book.found_in_lists; track listName) {
+                  <span class="text-xs px-2 py-0.5 rounded-full font-medium"
+                    style="background: rgba(50,104,145,0.1); color: var(--color-accent);">
+                    {{ listName }}
+                  </span>
+                  }
+                </div>
+                }
+
+                @if (book.description) {
+                <p class="text-sm mb-2" style="color: var(--color-text-secondary);">
+                  {{ truncate(book.description, 180) }}
+                </p>
+                }
+
+                <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs mb-2" style="color: var(--color-text-secondary);">
+                  @if (book.rank) {
+                  <span>🏆 Ranking: #{{ book.rank }}</span>
+                  }
+                  @if (book.weeks_on_list > 0) {
+                  <span>📅 {{ book.weeks_on_list }} semanas en lista</span>
+                  }
+                  @if (book.publisher) {
+                  <span>🏛 {{ book.publisher }}</span>
+                  }
+                </div>
+
+                @if (book.amazon_product_url) {
+                <a [href]="book.amazon_product_url" target="_blank" rel="noopener noreferrer"
+                  class="btn-secondary text-xs py-1 px-3">
+                  Ver en Amazon ↗
+                </a>
+                }
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+        }
+
+      </div>
+      }
+
+      <!-- Estado vacío inicial (antes de la primera consulta) -->
+      @if (!isLoading() && !hasResults() && !errorMessage()) {
+      <div class="text-center py-16" style="color: var(--color-text-secondary);">
+        <div class="text-5xl mb-4">📚</div>
+        <div class="font-serif font-bold text-lg mb-2">
+          Lista para consultar
+        </div>
+        <div class="text-sm">
+          @if (selectedOption()!.fields.length > 0) {
+          Completa los parámetros y haz clic en "Consultar API"
+          } @else {
+          Haz clic en "Consultar API" para obtener los resultados
+          }
+        </div>
+      </div>
+      }
+    </div>
+    }
+
+  </main>
+
+  <!-- =====================================================================
+    FOOTER
+    ===================================================================== -->
+  <footer class="app-footer">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div>
+          Ejercicio: Exploración de la
+          <a href="https://developer.nytimes.com/docs/books-product/1/overview" target="_blank"
+            rel="noopener noreferrer" class="underline" style="color: var(--color-accent);">
+            NYTimes Books API
+          </a>
+          · Angular 18 + FastAPI
+        </div>
+        <div class="text-xs">
+          Datos © The New York Times Company · Uso académico
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</div>

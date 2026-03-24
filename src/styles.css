@@ -1,0 +1,273 @@
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Libre+Franklin:wght@300;400;500;600;700&display=swap');
+
+/* =============================================================================
+   Estilos Globales - NYTimes Books Explorer
+   ============================================================================= */
+
+/* Directivas de Tailwind CSS - deben estar al inicio */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   Variables CSS para temas claro y oscuro
+   --------------------------------------------------------------------------- */
+:root {
+  /* Colores base */
+  --color-bg: #F7F7F5;
+  --color-bg-secondary: #FFFFFF;
+  --color-text: #121212;
+  --color-text-secondary: #727272;
+  --color-border: #E2E2E2;
+  --color-accent: #326891;
+  --color-accent-hover: #1a4f6e;
+  --color-error: #D0021B;
+  --color-success: #2e7d32;
+  --color-warning: #e65100;
+
+  /* Sombras */
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+  --shadow-card-hover: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+/* Modo oscuro */
+.dark {
+  --color-bg: #0f0f0f;
+  --color-bg-secondary: #1a1a1a;
+  --color-text: #EDEDED;
+  --color-text-secondary: #9a9a9a;
+  --color-border: #2e2e2e;
+  --color-accent: #5a9ec5;
+  --color-accent-hover: #7ab8d9;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.3);
+  --shadow-card-hover: 0 4px 16px rgba(0,0,0,0.5);
+}
+
+/* ---------------------------------------------------------------------------
+   Estilos base
+   --------------------------------------------------------------------------- */
+* {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Libre Franklin', 'Helvetica Neue', sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  transition: background-color 0.2s ease, color 0.2s ease;
+  line-height: 1.6;
+}
+
+/* Selección de texto con colores NYT */
+::selection {
+  background-color: #326891;
+  color: white;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-border);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-text-secondary);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
+
+/* ---------------------------------------------------------------------------
+   Clases de utilidad personalizadas (complementan Tailwind)
+   --------------------------------------------------------------------------- */
+@layer components {
+
+  /* Tarjeta de libro */
+  .book-card {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    box-shadow: var(--shadow-card);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    overflow: hidden;
+  }
+  .book-card:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+  }
+
+  /* Botón primario estilo NYT */
+  .btn-primary {
+    background-color: var(--color-accent);
+    color: white;
+    padding: 0.625rem 1.25rem;
+    border-radius: 2px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .btn-primary:hover {
+    background-color: var(--color-accent-hover);
+  }
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Botón secundario */
+  .btn-secondary {
+    background-color: transparent;
+    color: var(--color-accent);
+    padding: 0.625rem 1.25rem;
+    border-radius: 2px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    border: 1.5px solid var(--color-accent);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .btn-secondary:hover {
+    background-color: var(--color-accent);
+    color: white;
+  }
+
+  /* Divider estilo NYT */
+  .nyt-divider {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 1rem 0;
+  }
+
+  /* Badge de ranking */
+  .rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--color-accent);
+    color: white;
+    font-weight: 700;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+  }
+  .rank-badge.rank-1 { background: #B8860B; }
+  .rank-badge.rank-2 { background: #A0A0A0; }
+  .rank-badge.rank-3 { background: #8B4513; }
+
+  /* Input de formulario */
+  .form-input {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1.5px solid var(--color-border);
+    border-radius: 3px;
+    background: var(--color-bg-secondary);
+    color: var(--color-text);
+    font-size: 0.9375rem;
+    font-family: inherit;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    outline: none;
+  }
+  .form-input:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(50, 104, 145, 0.12);
+  }
+  .form-input::placeholder {
+    color: var(--color-text-secondary);
+  }
+
+  /* Select de formulario */
+  .form-select {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1.5px solid var(--color-border);
+    border-radius: 3px;
+    background: var(--color-bg-secondary);
+    color: var(--color-text);
+    font-size: 0.9375rem;
+    font-family: inherit;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23727272' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.875rem center;
+    padding-right: 2.5rem;
+  }
+  .form-select:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(50, 104, 145, 0.12);
+  }
+
+  /* Animación de entrada */
+  .animate-fade-in {
+    animation: fadeIn 0.35s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Skeleton loading */
+  .skeleton {
+    background: linear-gradient(90deg, var(--color-border) 25%, var(--color-bg) 50%, var(--color-border) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: 3px;
+  }
+  @keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Estilos para la portada de libros
+   --------------------------------------------------------------------------- */
+.book-cover {
+  width: 80px;
+  min-width: 80px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 2px;
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.15);
+}
+
+/* ---------------------------------------------------------------------------
+   Tipografía editorial
+   --------------------------------------------------------------------------- */
+.font-serif {
+  font-family: 'Libre Baskerville', Georgia, serif;
+}
+
+.headline-xl {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+/* Transición suave entre modo oscuro/claro */
+*, *::before, *::after {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
+}
