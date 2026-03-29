@@ -247,6 +247,12 @@
               [placeholder]="field.placeholder || ''">
             }
 
+            <!-- Input numérico -->
+            @if (field.type === 'number') {
+            <input type="number" class="form-input" [(ngModel)]="formValues[field.key]"
+              [placeholder]="field.placeholder || ''">
+            }
+
             <!-- Input de fecha -->
             @if (field.type === 'date') {
             <input type="date" class="form-input" [(ngModel)]="formValues[field.key]" max="{{ '2099-12-31' }}">
