@@ -92,26 +92,7 @@ const MENU_OPTIONS: MenuOption[] = [
         type: 'number',
         placeholder: 'Ej: 2020',
         required: true,
-        hint: 'Escribe el año que deseas consultar.'
-      },
-      {
-        key: 'list_name',
-        label: 'Categoría',
-        type: 'select',
-        required: true,
-        hint: 'Selecciona la categoría de best-sellers.',
-        options: [
-          { value: 'hardcover-fiction', label: '📖 Hardcover Fiction' },
-          { value: 'hardcover-nonfiction', label: '📘 Hardcover Nonfiction' },
-          { value: 'paperback-nonfiction', label: '📄 Paperback Nonfiction' },
-          { value: 'young-adult', label: '👦 Young Adult' },
-          { value: 'childrens-middle-grade', label: '🧒 Children\'s Middle Grade' },
-          { value: 'graphic-books-and-manga', label: '🎭 Graphic Books & Manga' },
-          { value: 'science', label: '🔬 Science' },
-          { value: 'business-books', label: '💼 Business Books' },
-          { value: 'advice-how-to-and-miscellaneous', label: '💡 Advice & How-To' },
-          { value: 'mass-market-paperback', label: '📃 Mass Market Paperback' },
-        ]
+        hint: 'Escribe el año de la lista No Ficción que deseas consultar.'
       }
     ]
   },
@@ -405,7 +386,7 @@ export class AppComponent implements OnInit {
   // -------------------------------------------------------------------------
   private fetchHistoricalList(): void {
     const date = this.formValues['date'];
-    const listName = this.formValues['list_name'];
+    const listName = 'hardcover-nonfiction';
 
     this.nytService.getHistoricalList(date, listName).subscribe({
       next: (data) => {
