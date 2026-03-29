@@ -748,44 +748,110 @@
               ========================================================= -->
         @if (resultType() === 'bestseller_search') {
         <div>
+          <!-- VISTA 1: Ranking General de Autores (Si NO hay búsqueda) -->
+          @if (!results()?.query) {
+          <div class="mb-5 text-center px-4">
+            <h3 class="font-serif font-bold text-2xl mb-2" style="color: var(--color-text);">
+              🏆 Autores Más Destacados
+            </h3>
+            <p class="text-sm max-w-lg mx-auto" style="color: var(--color-text-secondary);">
+              Descubre a los autores más excepcionales de No Ficción, clasificados según su histórico de semanas en nuestra lista. Haz clic en cualquier autor para ver sus libros.
+            </p>
+          </div>
+          
+          <div class="author-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            @for (author of prominentAuthors(); track author.name; let i = $index) {
+            <button class="author-card p-5 flex flex-col items-center justify-center text-center transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl relative overflow-hidden group"
+                    style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: 12px; cursor: pointer;"
+                    (click)="selectAuthor(author.name)">
+              
+              <!-- Background gradient glow on hover -->
+              <div class="absolute inset-0 bg-gradient-to-b from-transparent to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+              <!-- Medallas Top 3 / Ranking -->
+              @if (i === 0) {
+              <div class="absolute top-2 right-3 text-2xl drop-shadow-md transform group-hover:scale-110 transition-transform" title="Top 1">🥇</div>
+              <div class="w-16 h-16 rounded-full flex items-center justify-center mb-3 text-2xl font-black bg-amber-100 text-amber-600 shadow-inner ring-4 ring-amber-50">
+                1
+              </div>
+              } @else if (i === 1) {
+              <div class="absolute top-2 right-3 text-xl drop-shadow-md transform group-hover:scale-110 transition-transform" title="Top 2">🥈</div>
+              <div class="w-14 h-14 rounded-full flex items-center justify-center mb-3 text-xl font-bold bg-gray-200 text-gray-600 shadow-inner ring-4 ring-gray-50">
+                2
+              </div>
+              } @else if (i === 2) {
+              <div class="absolute top-2 right-3 text-xl drop-shadow-md transform group-hover:scale-110 transition-transform" title="Top 3">🥉</div>
+              <div class="w-14 h-14 rounded-full flex items-center justify-center mb-3 text-xl font-bold bg-orange-100 text-orange-700 shadow-inner ring-4 ring-orange-50">
+                3
+              </div>
+              } @else {
+              <div class="w-12 h-12 rounded-full flex items-center justify-center mb-3 text-lg font-bold bg-gray-100 text-gray-500 shadow-inner dark:bg-gray-800 dark:text-gray-400">
+                #{{ i + 1 }}
+              </div>
+              }
+
+              <h4 class="font-serif font-bold text-sm sm:text-base leading-tight mb-2 relative z-10" style="color: var(--color-text);">
+                {{ author.name }}
+              </h4>
+              <div class="text-xs font-semibold px-3 py-1 rounded-full relative z-10 transition-colors group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30"
+                   style="background: rgba(50,104,145,0.08); color: var(--color-accent);">
+                {{ author.book_count }} semanas
+              </div>
+            </button>
+            }
+          </div>
+          } @else {
+          <!-- VISTA 2: Libros del Autor (Si HAY búsqueda) -->
+          
+          <div class="flex flex-wrap items-center justify-between mb-5 pb-4 gap-3" style="border-bottom: 1px solid var(--color-border);">
+            <h3 class="font-serif font-bold text-xl sm:text-2xl" style="color: var(--color-text);">
+              Libros de <span style="color: var(--color-accent);">{{ results()?.query }}</span>
+            </h3>
+            <button (click)="formValues['query'] = ''; executeQuery()" 
+                    class="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                    style="border: 1px solid var(--color-border); color: var(--color-text-secondary);">
+              ← Volver al ranking
+            </button>
+          </div>
+
           @if (currentBooks.length === 0) {
-          <div class="text-center py-12" style="color: var(--color-text-secondary);">
-            <div class="text-4xl mb-3">📭</div>
-            <div class="font-medium">No se encontraron coincidencias</div>
-            <div class="text-sm mt-1">
-              "{{ results()?.query }}" no aparece en ninguna lista best-seller actual.
+          <div class="text-center py-16" style="color: var(--color-text-secondary);">
+            <div class="text-5xl mb-4 opacity-70">📭</div>
+            <div class="font-bold text-lg mb-1" style="color: var(--color-text);">No se encontraron libros</div>
+            <div class="text-sm">
+              No hay registros históricos de best-sellers para este autor.
             </div>
-            <div class="text-sm mt-1">
-              Intenta con otro nombre de autor o título.
-            </div>
+            <button (click)="formValues['query'] = ''; executeQuery()" class="mt-4 text-sm font-semibold underline" style="color: var(--color-accent);">
+              Ver Ranking de Autores
+            </button>
           </div>
           }
 
-          <div class="space-y-3">
+          <div class="space-y-4">
             @for (book of currentBooks; track book.primary_isbn13 || book.title) {
-            <div class="book-card flex gap-4 p-4">
+            <div class="book-card flex flex-col sm:flex-row gap-5 p-5 bg-white dark:bg-gray-900 rounded-xl transition-shadow hover:shadow-md" style="border: 1px solid var(--color-border);">
 
               <!-- Portada -->
-              <img [src]="getBookCover(book)" [alt]="book.title" class="book-cover flex-shrink-0"
+              <img [src]="getBookCover(book)" [alt]="book.title" class="book-cover flex-shrink-0 w-24 h-auto mx-auto sm:mx-0 shadow-sm rounded-sm"
                 (error)="$any($event.target).src = defaultBookCover">
 
-              <div class="flex-1 min-w-0">
-                <h3 class="font-serif font-bold text-base leading-snug mb-0.5">
+              <div class="flex-1 min-w-0 flex flex-col justify-center">
+                <h3 class="font-serif font-bold text-lg sm:text-xl leading-snug mb-1" style="color: var(--color-text);">
                   {{ book.title }}
                 </h3>
-                <div class="text-sm font-medium mb-1.5" style="color: var(--color-text-secondary);">
+                <div class="text-sm font-semibold mb-2" style="color: var(--color-text-secondary);">
                   ✍️ {{ book.author }}
                 </div>
 
                 <!-- Listas donde aparece el libro -->
                 @if (book.found_in_lists && book.found_in_lists.length > 0) {
-                <div class="flex flex-wrap gap-1.5 mb-2">
-                  <span class="text-xs font-semibold" style="color: var(--color-text-secondary);">
-                    En listas:
+                <div class="flex flex-wrap gap-2 mb-3">
+                  <span class="text-xs font-bold uppercase tracking-wide mt-0.5" style="color: var(--color-text-secondary);">
+                    Listas NYT:
                   </span>
                   @for (listName of book.found_in_lists; track listName) {
-                  <span class="text-xs px-2 py-0.5 rounded-full font-medium"
-                    style="background: rgba(50,104,145,0.1); color: var(--color-accent);">
+                  <span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
+                    style="background: rgba(50,104,145,0.08); color: var(--color-accent); border: 1px solid rgba(50,104,145,0.15);">
                     {{ listName }}
                   </span>
                   }
@@ -793,33 +859,36 @@
                 }
 
                 @if (book.description) {
-                <p class="text-sm mb-2" style="color: var(--color-text-secondary);">
-                  {{ truncate(book.description, 180) }}
+                <p class="text-sm mb-3 leading-relaxed" style="color: var(--color-text-secondary);">
+                  {{ truncate(book.description, 200) }}
                 </p>
                 }
 
-                <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs mb-2" style="color: var(--color-text-secondary);">
+                <div class="flex flex-wrap gap-x-5 gap-y-2 text-xs mb-3 font-medium" style="color: var(--color-text-secondary);">
                   @if (book.rank) {
-                  <span>🏆 Ranking: #{{ book.rank }}</span>
+                  <span class="flex items-center gap-1">🏆 <span class="font-bold">#{{ book.rank }}</span></span>
                   }
                   @if (book.weeks_on_list > 0) {
-                  <span>📅 {{ book.weeks_on_list }} semanas en lista</span>
+                  <span class="flex items-center gap-1">📅 <span class="font-bold">{{ book.weeks_on_list }} sem.</span></span>
                   }
                   @if (book.publisher) {
-                  <span>🏛 {{ book.publisher }}</span>
+                  <span class="flex items-center gap-1">🏛 <span class="font-bold">{{ book.publisher }}</span></span>
                   }
                 </div>
 
                 @if (book.amazon_product_url) {
-                <a [href]="book.amazon_product_url" target="_blank" rel="noopener noreferrer"
-                  class="btn-secondary text-xs py-1 px-3">
-                  Ver en Amazon ↗
-                </a>
+                <div class="mt-auto pt-2">
+                  <a [href]="book.amazon_product_url" target="_blank" rel="noopener noreferrer"
+                    class="btn-secondary text-xs py-1.5 px-4 font-bold inline-flex items-center gap-1 transition-transform hover:scale-105">
+                    Comprar en Amazon ↗
+                  </a>
+                </div>
                 }
               </div>
             </div>
             }
           </div>
+          }
         </div>
         }
 
