@@ -30,7 +30,7 @@
           </div>
           <div>
             <div class="font-serif font-bold text-base leading-tight" style="color: var(--color-text);">
-              Books Explorer
+              Hardcover Nonfiction
             </div>
             <div class="text-xs" style="color: var(--color-text-secondary);">
               Best-Sellers &amp; Reseñas
@@ -635,14 +635,16 @@
 
                   <!-- Ranking histórico (si aplica) -->
                   @if (book.ranks_history && book.ranks_history.length > 0) {
-                  <div class="bg-opacity-5 p-2 rounded-sm border-l-2 border-accent" style="background: var(--color-accent);">
+                  <div class="bg-opacity-5 p-2 rounded-sm border-l-2 border-accent"
+                    style="background: var(--color-accent);">
                     <div class="text-[10px] font-bold uppercase mb-1" style="color: var(--color-accent);">
                       📈 Rendimiento Histórico
                     </div>
                     <div class="flex flex-wrap gap-3">
                       @for (rank of book.ranks_history.slice(0, 3); track rank.published_date) {
                       <div class="text-[11px]">
-                        <span class="font-bold">#{{ rank.rank }}</span> en {{ rank.display_name }} ({{ rank.published_date }})
+                        <span class="font-bold">#{{ rank.rank }}</span> en {{ rank.display_name }} ({{
+                        rank.published_date }})
                       </div>
                       }
                     </div>
